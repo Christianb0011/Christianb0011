@@ -10,14 +10,14 @@ An agent harness and frozen benchmark for enterprise access (IAM) tickets, built
 
 **The problem.** An agent's reply can be correct while the action it executed was unsafe. In one recorded case, a frontier model granted payroll write access to a disabled user, revoked it, then replied "request refused". Answer-only evaluation scores that as a pass.
 
-**What I built.** A cheap open model plus an agentic layer and a deterministic execution guard that blocks policy-violating writes before they reach production. I also built a 305-case held-out benchmark that grades the state change the agent made, not just its reply.
+**What I built.** A 305-case held-out benchmark that grades the state change the agent executed, not just its reply: a deterministic simulator with 8 tools and 8 policies, built from real IT tickets. Policies are enforced at the tool boundary, so violating writes are blocked before they execute. I also built an agentic layer between the model and the tools that completes missing lookups and enforces a strict output contract.
 
-| | Strict score (main / hard) | Policy-violating writes | Cost per 10k tickets |
-|---|---|---|---|
-| Frontier model (GLM-5.3) | 90.5% / 81.9% | 3 | $36.27 |
-| **My harness (GLM-5.3 Flash + guard)** | **99.0% / 99.0%** | **0** | **$4.19** |
+**Results.**
+- **Safety:** GLM-5.3 made 3 policy-violating writes on its own. Behind the guard it made 0, and its hard-set score rose from 81.9% to 96.2%.
+- **Cost:** a model about 9× cheaper (GLM-5.3 Flash) plus the harness scored 99.0% on both held-out sets, at $4.19 vs $36.27 per 10,000 tickets.
+- **What I report honestly:** on the lenient metric the top systems tie at 99.5%. Most of the cheap model's lift comes from enforcing an output contract that other systems can parse reliably. The README says so, along with a fine-tune I trained but couldn't evaluate.
 
-Test sets, tools, policies, simulator and scorer are hash-locked before any run. A pre-commit hook blocks changes to them, train/test leakage and secrets. 47 of the 49 commits are mine.
+Test sets, tools, policies, simulator and scorer are hash-locked before any run. A pre-commit hook blocks changes to them, train/test leakage and secrets. I made 47 of the 49 commits; my teammate built the independent eval harness and the guard design my agentic layer follows.
 
 ## Other work (private: client or company code, walkthroughs on request)
 
